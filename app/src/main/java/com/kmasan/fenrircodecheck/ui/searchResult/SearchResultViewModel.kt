@@ -14,6 +14,7 @@ import com.kmasan.fenrircodecheck.model.ShopData
 import com.kmasan.fenrircodecheck.model.SearchResultRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.util.stream.IntStream
 
 class SearchResultViewModel(private val repository: SearchResultRepository) : ViewModel() {
@@ -113,7 +114,7 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                 modelClass: Class<T>
             ): T {
                 return SearchResultViewModel(
-                    SearchResultRepository(GourmetSearchAPI(context.getString(R.string.api_token)))
+                    SearchResultRepository(GourmetSearchAPI(OkHttpClient(), context.getString(R.string.api_token)))
                 ) as T
             }
         }
