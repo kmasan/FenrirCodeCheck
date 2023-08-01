@@ -121,6 +121,12 @@ class SearchCriteriaFragment: Fragment() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // GPSの取得終了
+        viewModel.stopGPSLogger()
+    }
+
     companion object{
         fun newInstance() = SearchCriteriaFragment()
     }

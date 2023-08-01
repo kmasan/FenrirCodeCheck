@@ -1,5 +1,8 @@
 package com.kmasan.fenrircodecheck.ui.searchResult
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -7,22 +10,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +40,10 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.kmasan.fenrircodecheck.model.GourmetSearchParameter
 import com.kmasan.fenrircodecheck.model.ShopData
-import com.kmasan.fenrircodecheck.ui.searchCriteria.SearchCriteriaViewModel
 import com.kmasan.fenrircodecheck.ui.theme.FenrirCodeCheckTheme
 
 class SearchResultFragment : Fragment() {
@@ -209,7 +203,7 @@ class SearchResultFragment : Fragment() {
             color = MaterialTheme.colorScheme.background,
         ) {
             // 表示要素：店舗名，画像，住所，営業時間
-            Column(modifier = Modifier.padding(4.dp)) {
+            Column(modifier = Modifier.padding(top = 12.dp)) {
                 Text(text = "店舗名: ${data.name}")
                 AsyncImage(
                     model = ImageRequest.Builder(requireActivity())
@@ -221,7 +215,22 @@ class SearchResultFragment : Fragment() {
                 )
                 Text(text = "住所: ${data.address}")
                 Text(text = "営業時間: ${data.open}")
+                Button(onClick = { openMap(data.name) }) {
+                    Text(text = "Open GoogleMap")
+                }
             }
+        }
+    }
+
+    private fun openMap(address: String){
+        val url = "https://www.google.com/maps/search/?api=1&query=$address"
+        try {
+            Intent(Intent.ACTION_VIEW).also {
+                it.data = Uri.parse(url)
+                startActivity(it)
+            }
+        } catch (e: ActivityNotFoundException) {
+            Log.d(javaClass.name, "can't open: $url")
         }
     }
 }
