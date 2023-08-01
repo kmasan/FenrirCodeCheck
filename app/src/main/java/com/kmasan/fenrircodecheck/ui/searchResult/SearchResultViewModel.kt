@@ -47,6 +47,7 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
             for (i in IntStream.range(0, json.length())){
                 val jsonObj = json.getJSONObject(i)
                 val shopName = jsonObj.getString("name")
+                val url = jsonObj.getJSONObject("urls").getString("pc")
                 val thumbnail = jsonObj.getString("logo_image")
                 val shopTop = jsonObj
                     .getJSONObject("photo")
@@ -57,7 +58,7 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                 val open = jsonObj.getString("open")
                 shopList.add(
                     ShopData(
-                        shopName, thumbnail, shopTop, access, address, open
+                        shopName, url, thumbnail, shopTop, access, address, open
                     )
                 )
             }
@@ -85,6 +86,7 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
             for (i in IntStream.range(0, json.length())){
                 val jsonObj = json.getJSONObject(i)
                 val shopName = jsonObj.getString("name")
+                val url = jsonObj.getJSONObject("urls").getString("pc")
                 val thumbnail = jsonObj.getString("logo_image")
                 val shopTop = jsonObj
                     .getJSONObject("photo")
@@ -95,7 +97,7 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                 val open = jsonObj.getString("open")
                 shopList.add(
                     ShopData(
-                        shopName, thumbnail, shopTop, access, address, open
+                        shopName, url, thumbnail, shopTop, access, address, open
                     )
                 )
             }

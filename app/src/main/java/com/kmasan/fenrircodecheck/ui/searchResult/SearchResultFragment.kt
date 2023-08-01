@@ -216,7 +216,10 @@ class SearchResultFragment : Fragment() {
                 Text(text = "住所: ${data.address}")
                 Text(text = "営業時間: ${data.open}")
                 Button(onClick = { openMap(data.name) }) {
-                    Text(text = "Open GoogleMap")
+                    Text(text = "GoogleMap")
+                }
+                Button(onClick = { openUrl(data.url) }) {
+                    Text(text = "その他情報")
                 }
             }
         }
@@ -224,6 +227,17 @@ class SearchResultFragment : Fragment() {
 
     private fun openMap(address: String){
         val url = "https://www.google.com/maps/search/?api=1&query=$address"
+        try {
+            Intent(Intent.ACTION_VIEW).also {
+                it.data = Uri.parse(url)
+                startActivity(it)
+            }
+        } catch (e: ActivityNotFoundException) {
+            Log.d(javaClass.name, "can't open: $url")
+        }
+    }
+
+    private fun openUrl(url: String){
         try {
             Intent(Intent.ACTION_VIEW).also {
                 it.data = Uri.parse(url)

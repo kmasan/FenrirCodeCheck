@@ -76,7 +76,7 @@ class SearchCriteriaFragment: Fragment() {
                         ) {
                             // 検索範囲の設定
                             Dropdown(
-                                "range",
+                                "範囲",
                                 listOf(
                                     "300m",
                                     "500m",
@@ -98,7 +98,7 @@ class SearchCriteriaFragment: Fragment() {
                                     else -> 3
                                 })
                             }) {
-                                Text("Search")
+                                Text("検索")
                             }
                         }
                         if(viewModel.displayFragment.value && apiParameter != null){
