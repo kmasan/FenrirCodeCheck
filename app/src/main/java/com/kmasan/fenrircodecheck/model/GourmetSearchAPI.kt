@@ -12,14 +12,14 @@ class GourmetSearchAPI(private val apiToken: String) {
     }
     private val client = OkHttpClient()
 
-    fun search(searchParameter: GourmetSearchParameter): APIResult<String>{
+    fun search(searchParameter: GourmetSearchParameter, page: Int = 1, count: Int = 10): APIResult<String>{
         // 検索タグの整理
         val lat = searchParameter.lat
         val lng = searchParameter.lng
         val range = searchParameter.range
         // リクエストの作成
         val request = Request.Builder()
-            .url("$apiBaseURL/?key=$apiToken&format=json&lat=$lat&lng=$lng&range=$range")
+            .url("$apiBaseURL/?key=$apiToken&format=json&lat=$lat&lng=$lng&range=$range&start=${page+count*(page-1)}&count=$count")
             .build()
 
         // リクエストを実行

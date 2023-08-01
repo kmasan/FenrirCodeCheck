@@ -1,6 +1,7 @@
 package com.kmasan.fenrircodecheck.ui.searchCriteria
 
 import android.annotation.SuppressLint
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -30,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -41,57 +44,69 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.viewModels
+import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import com.kmasan.fenrircodecheck.MainApplication
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.kmasan.fenrircodecheck.model.GourmetSearchParameter
 import com.kmasan.fenrircodecheck.ui.searchResult.SearchResultFragment
 import com.kmasan.fenrircodecheck.ui.theme.FenrirCodeCheckTheme
+import kotlinx.coroutines.launch
 
 class SearchCriteriaFragment: Fragment() {
-
-    private lateinit var mainApp: MainApplication
-    private lateinit var viewModel: SearchCriteriaViewModel
+    private val viewModel: SearchCriteriaViewModel by viewModels { SearchCriteriaViewModel.factory(requireActivity()) }
     private lateinit var mBackPressedCallback: OnBackPressedCallback
 
     private val ranges = mutableStateOf("1000m")
     private val expandFragment = mutableStateOf(false)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(this.javaClass.name, "onCreate")
+
+//        viewModel = ViewModelProvider(this,
+//            SearchCriteriaViewModel.factory(requireActivity())
+//        )[SearchCriteriaViewModel::class.java]
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Log.d(this@SearchCriteriaFragment.javaClass.name, "viewModel.uiState.value: ${viewModel.uiState.value}")
+                expandFragment.value = viewModel.uiState.value
+                viewModel.startGPSLogger()
+                viewModel.setLastLocation()
+            }
+        }
+    }
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        mainApp = requireActivity().application as MainApplication
-
-        viewModel = ViewModelProvider(this,
-            SearchCriteriaViewModelFactory(requireActivity())
-        )[SearchCriteriaViewModel::class.java]
-
-        viewModel.setLastLocation()
-
         return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 val range = remember { ranges }
                 val apiParameter by viewModel.parameter.observeAsState()
                 FenrirCodeCheckTheme{
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.secondary
                     ) {
                         Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // この中でjetpack composeが扱えるようになります
-                            Text(text = "lat: 35.171126")
-                            Text(text = "lng: 136.909612")
+//                            Text(text = "lat: 35.171126")
+//                            Text(text = "lng: 136.909612")
                             Dropdown(
                                 "range",
                                 listOf(
@@ -106,6 +121,7 @@ class SearchCriteriaFragment: Fragment() {
 
                             Button(onClick = {
                                 Log.d(this.javaClass.name, "$ranges, $range")
+                                expandFragment.value = false
                                 viewModel.searchShop(when(ranges.value){
                                     "300m" -> 1
                                     "500m" -> 2
@@ -118,7 +134,7 @@ class SearchCriteriaFragment: Fragment() {
                             }
                         }
                         if(expandFragment.value && apiParameter != null){
-                            SetFragment(apiParameter!!)
+                            SetFragment(apiParameter!!, modifier = Modifier.wrapContentSize())
                         }
                     }
                 }
@@ -139,8 +155,9 @@ class SearchCriteriaFragment: Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, mBackPressedCallback)
 
         viewModel.parameter.observe(viewLifecycleOwner){
-            Log.d(this.javaClass.name, "${it}")
+            Log.d(this.javaClass.name, "$it")
             expandFragment.value = true
+            viewModel.resultFragmentExpand(true)
         }
     }
 
@@ -152,24 +169,22 @@ class SearchCriteriaFragment: Fragment() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun SetFragment(parameter: GourmetSearchParameter ,modifier: Modifier = Modifier){
-        Scaffold(
-            content = {
-                AndroidView(modifier = modifier, factory = { context ->
-                    FrameLayout(context).apply {
-                        id = View.generateViewId()
-                    }
-                }, update = {
-                    val transaction: FragmentTransaction = parentFragmentManager.beginTransaction()
-                    transaction.replace(it.id, SearchResultFragment.newInstance(
-                        parameter.lat,
-                        parameter.lng,
-                        parameter.range
-                    ))
-                    transaction.addToBackStack(null)
-                    transaction.commit()
-                })
+        AndroidView(modifier = modifier, factory = { context ->
+            FragmentContainerView(context).apply {
+                val frameId = 2
+                id = frameId
+                setBackgroundColor(Color.Red.hashCode())
             }
-        )
+        }, update = {
+            val transaction: FragmentTransaction = parentFragmentManager.beginTransaction()
+            transaction.replace(it.id, SearchResultFragment.newInstance(
+                parameter.lat,
+                parameter.lng,
+                parameter.range
+            ))
+            transaction.addToBackStack(null)
+            transaction.commit()
+        })
     }
 
     @Composable

@@ -2,41 +2,33 @@ package com.kmasan.fenrircodecheck
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentContainerView
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.imageLoader
 import coil.request.ImageRequest
 import com.kmasan.fenrircodecheck.ui.searchCriteria.SearchCriteriaFragment
 import com.kmasan.fenrircodecheck.ui.theme.FenrirCodeCheckTheme
@@ -49,12 +41,12 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(javaClass.name, "onCreate")
         setContent {
             FenrirCodeCheckTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     ConstraintLayout(
                         modifier = Modifier.fillMaxSize(),
@@ -64,13 +56,14 @@ class MainActivity : AppCompatActivity() {
                         Scaffold(
                             content = {
                                 AndroidView(factory = { context ->
-                                    FrameLayout(context).apply {
+                                    FragmentContainerView(context).apply {
                                         id = View.generateViewId()
                                     }
                                 }, update = {
                                     val fragment = SearchCriteriaFragment.newInstance()
                                     val transaction = supportFragmentManager.beginTransaction()
                                     transaction.replace(it.id, fragment)
+//                                    transaction.addToBackStack(null)
                                     transaction.commit()
                                 })
                             },
@@ -84,8 +77,17 @@ class MainActivity : AppCompatActivity() {
                                 },
                         )
                         
-                        RecruitCredit(onClick = { /*TODO*/ }, context = applicationContext,
-                        modifier = Modifier
+                        RecruitCredit(onClick = {
+                            val url = "http://webservice.recruit.co.jp/"
+                            try {
+                                Intent(Intent.ACTION_VIEW).also {
+                                    it.data = Uri.parse(url)
+                                    startActivity(it)
+                                }
+                            } catch (e: ActivityNotFoundException) {
+                                Log.d(javaClass.name, "can't open: $url")
+                            }
+                        }, modifier = Modifier
                             .size(137.dp, 17.dp)
                             .constrainAs(credit) {
                                 bottom.linkTo(parent.bottom, 4.dp)
@@ -99,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         requestLocationPermission()
     }
 
-    fun requestLocationPermission() {
+    private fun requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -127,36 +129,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Composable
-fun RecruitCredit(onClick: ()->Unit, context: Context ,modifier: Modifier = Modifier) {
-    IconButton(onClick = onClick,
-        modifier = modifier
-    ){
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data("http://webservice.recruit.co.jp/banner/hotpepper-s.gif")
-                .build(),
-            contentDescription = "RecruitCredit",
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxSize()
-        )
+    @Composable
+    fun RecruitCredit(onClick: ()->Unit, modifier: Modifier = Modifier) {
+        IconButton(onClick = onClick,
+            modifier = modifier
+        ){
+            AsyncImage(
+                model = ImageRequest.Builder(applicationContext)
+                    .data("http://webservice.recruit.co.jp/banner/hotpepper-s.gif")
+                    .build(),
+                contentDescription = "RecruitCredit",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    FenrirCodeCheckTheme {
-
-    }
-}
