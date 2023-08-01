@@ -6,6 +6,7 @@ import org.json.JSONObject
 class SearchResultRepository(
     private val api: GourmetSearchAPI
 ) {
+    // 検索条件から検索
     fun searchShop(parameter: GourmetSearchParameter, count: Int): JsonArrayResult{
         return when(val result = api.search(parameter, count=count)){
             is APIResult.Success<String> ->{
@@ -21,6 +22,7 @@ class SearchResultRepository(
         }
     }
 
+    // 追加の検索結果を取得
     fun addSearchShop(parameter: GourmetSearchParameter, page: Int, count: Int): JsonArrayResult{
         return when(val result = api.search(parameter, page = page, count=count)){
             is APIResult.Success<String> ->{

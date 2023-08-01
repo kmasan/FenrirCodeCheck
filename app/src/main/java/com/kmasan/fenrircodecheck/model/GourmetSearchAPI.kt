@@ -6,12 +6,14 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
 
-class GourmetSearchAPI(private val apiToken: String) {
+// グルメサーチAPI
+class GourmetSearchAPI(private val client: OkHttpClient, private val apiToken: String) {
     companion object{
+        // APIのベースURL
         const val apiBaseURL = "http://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
     }
-    private val client = OkHttpClient()
 
+    // 検索条件からAPIを実行
     fun search(searchParameter: GourmetSearchParameter, page: Int = 1, count: Int = 10): APIResult<String>{
         // 検索タグの整理
         val lat = searchParameter.lat
@@ -19,7 +21,7 @@ class GourmetSearchAPI(private val apiToken: String) {
         val range = searchParameter.range
         // リクエストの作成
         val request = Request.Builder()
-            .url("$apiBaseURL/?key=$apiToken&format=json&lat=$lat&lng=$lng&range=$range&start=${page+count*(page-1)}&count=$count")
+            .url("$apiBaseURL/?key=$apiToken&format=json&lat=$lat&lng=$lng&range=$range&start=${1+count*(page-1)}&count=$count")
             .build()
 
         // リクエストを実行

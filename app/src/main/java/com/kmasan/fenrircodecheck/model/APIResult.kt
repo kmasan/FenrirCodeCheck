@@ -1,5 +1,6 @@
 package com.kmasan.fenrircodecheck.model
 
+// APIの結果
 sealed class APIResult<out T : Any> {
 
     data class Success<out T : Any>(val data: T) : APIResult<T>()

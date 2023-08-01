@@ -1,5 +1,6 @@
 package com.kmasan.fenrircodecheck.model
 
+// 店情報
 data class ShopData(
     val name: String,
     val thumbnailURL: String,

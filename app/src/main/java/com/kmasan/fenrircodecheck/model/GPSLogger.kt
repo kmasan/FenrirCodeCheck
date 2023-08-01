@@ -12,12 +12,15 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
+// GPSから現在地を取得
 class GPSLogger(private val activity: Activity): LocationListener {
     private val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    // 最後に取得できた情報
     var location: Location? = null
     var lat: Double = 0.0
     var log: Double = 0.0
 
+    // GPSの取得開始
     fun start(){
         if (ActivityCompat.checkSelfPermission(
                 activity,
@@ -36,12 +39,13 @@ class GPSLogger(private val activity: Activity): LocationListener {
         }
     }
 
+    // 取得停止
     fun stop(){
         locationManager.removeUpdates(this)
     }
 
+    // 最後に確認された位置情報を取得
     fun lastLocation() {
-        // 最後に確認された位置情報を取得
         val fusedLocationClient: FusedLocationProviderClient =
             LocationServices.getFusedLocationProviderClient(activity)
         if (ActivityCompat.checkSelfPermission(

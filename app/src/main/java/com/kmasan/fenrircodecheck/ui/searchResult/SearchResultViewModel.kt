@@ -1,6 +1,7 @@
 package com.kmasan.fenrircodecheck.ui.searchResult
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,19 +17,32 @@ import kotlinx.coroutines.launch
 import java.util.stream.IntStream
 
 class SearchResultViewModel(private val repository: SearchResultRepository) : ViewModel() {
+    // 検索結果
     private val _shopList = MutableLiveData<List<ShopData>>()
     val shopList: LiveData<List<ShopData>> = _shopList
 
+    // 表示する店詳細の情報
     private val _selectShopData = MutableLiveData<ShopData>()
     val selectShopData: LiveData<ShopData> = _selectShopData
 
+    // 検索条件
+    lateinit var apiParameter: GourmetSearchParameter
+    fun setSelectShopData(data: ShopData) = _selectShopData.postValue(data)
+
+    // 詳細画面を表示しているか
+    val expandDetail = mutableStateOf(false)
+
+    // 現在の検索結果のページ数
     private var page = 1
 
+    // 条件から検索
     fun searchShop(parameter: GourmetSearchParameter){
         viewModelScope.launch(Dispatchers.IO){
             val result = repository.searchShop(parameter, LIST_COUNT)
             val json = result.jsonArray ?: return@launch
             val shopList = mutableListOf<ShopData>()
+
+            // 情報を整理して検索結果に保存
             for (i in IntStream.range(0, json.length())){
                 val jsonObj = json.getJSONObject(i)
                 val shopName = jsonObj.getString("name")
@@ -50,13 +64,23 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
         }
     }
 
+    // 追加の検索結果の取得
+    private var addSearchShopRunning = false
     fun addSearchShop(parameter: GourmetSearchParameter){
+        // 検索中の場合は終了
+        if(addSearchShopRunning) return
+
+        addSearchShopRunning = true
         viewModelScope.launch(Dispatchers.IO){
             page++
             val result = repository.addSearchShop(parameter, page, LIST_COUNT)
             val json = result.jsonArray ?: return@launch
             val shopList = mutableListOf<ShopData>()
+
+            // 現状の検索結果を追加
             _shopList.value?.let { shopList.addAll(it) }
+
+            // 追加の検索結果を追加
             for (i in IntStream.range(0, json.length())){
                 val jsonObj = json.getJSONObject(i)
                 val shopName = jsonObj.getString("name")
@@ -75,13 +99,14 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                 )
             }
             _shopList.postValue(shopList)
+            addSearchShopRunning = false
         }
     }
 
-    fun setSelectShopData(data: ShopData) = _selectShopData.postValue(data)
-
     companion object{
+        // １ページ分の検索結果数
         const val LIST_COUNT = 100
+
         fun factory(context: Context): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(

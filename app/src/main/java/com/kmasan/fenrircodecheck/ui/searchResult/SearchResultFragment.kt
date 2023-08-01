@@ -68,25 +68,17 @@ class SearchResultFragment : Fragment() {
     }
 
     private val viewModel: SearchResultViewModel by viewModels { SearchResultViewModel.factory(requireActivity()) }
-    private val searchCriteriaViewModel: SearchCriteriaViewModel by viewModels()
-    private lateinit var apiParameter: GourmetSearchParameter
-    private lateinit var mBackPressedCallback: OnBackPressedCallback
-
-    private val expandDetail = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 検索条件を整理
         arguments?.let {
             val lat = it.getDouble(LATITUDE)
             val lon = it.getDouble(LONGITUDE)
             val range = it.getInt(RANGE)
 
-            apiParameter = GourmetSearchParameter(lat, lon, range)
+            viewModel.apiParameter = GourmetSearchParameter(lat, lon, range)
         }
-
-//        viewModel = ViewModelProvider(this,
-//            SearchResultViewModel.factory(requireActivity())
-//        )[SearchResultViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -98,15 +90,18 @@ class SearchResultFragment : Fragment() {
             setContent {
                 val shopData = viewModel.shopList.observeAsState()
                 val selectShopData = viewModel.selectShopData.observeAsState()
+                val expandDetail by remember { viewModel.expandDetail }
                 FenrirCodeCheckTheme{
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
                         if(shopData.value != null) {
+                            // 検索結果を表示
                             ShopList(list = shopData.value!!)
                         }
-                        if(expandDetail.value){
+                        if(expandDetail){
+                            // 店の詳細情報を表示
                             selectShopData.value?.let { ShopDetail(it) }
                         }
                     }
@@ -118,23 +113,28 @@ class SearchResultFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mBackPressedCallback = object :OnBackPressedCallback(true){
+        // 戻るボタンの挙動を設定
+        val mBackPressedCallback = object :OnBackPressedCallback(true){
             override fun handleOnBackPressed() {
-                if(expandDetail.value){
-                    expandDetail.value = false
+                // 店の詳細画面が表示されているか
+                if(viewModel.expandDetail.value){
+                    // 表示されていたら検索結果画面に戻る
+                    viewModel.expandDetail.value = false
                 }else{
+                    // 表示されていなかったら検索条件設定画面に戻る
                     val transaction: FragmentManager = parentFragmentManager
                     transaction.popBackStack()
-//                    searchCriteriaViewModel.resultFragmentExpand(false)
                 }
             }
         }
-
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, mBackPressedCallback)
-        viewModel.searchShop(apiParameter)
+
+        // 条件から検索
+        viewModel.searchShop(viewModel.apiParameter)
     }
 
     @Composable
+    // 検索結果をリストで表示
     fun ShopList(list: List<ShopData>) {
         val listState = rememberLazyListState()
         LazyColumn(
@@ -154,24 +154,27 @@ class SearchResultFragment : Fragment() {
             }
         }
 
+        // リストの終端に近いかどうか
         val listEnd by remember {
             derivedStateOf {
                 listState.firstVisibleItemIndex >= list.size - 15
             }
         }
 
+        // リストの終端に近い場合は追加の検索結果を取得
         if (listEnd){
-            viewModel.addSearchShop(apiParameter)
+            viewModel.addSearchShop(viewModel.apiParameter)
         }
     }
 
     @Composable
+    // リストの１要素分
     fun ShopListRow(data: ShopData, modifier: Modifier = Modifier) {
+        // ボタンでその店の詳細を表示
         Button(
             onClick = {
-                        viewModel.setSelectShopData(data)
-                        expandDetail.value = true
-                      },
+                viewModel.setSelectShopData(data)
+                viewModel.expandDetail.value = true },
             modifier = modifier,
             colors = ButtonDefaults.textButtonColors(
                 containerColor = Color.Transparent,
@@ -179,8 +182,9 @@ class SearchResultFragment : Fragment() {
             ),
             shape = RectangleShape,
         ) {
-            Column {
-                Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+            // 表示要素：サムネイル，店舗名，アクセス
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
                         model = ImageRequest.Builder(requireActivity())
                             .data(data.thumbnailURL)
@@ -198,11 +202,13 @@ class SearchResultFragment : Fragment() {
     }
 
     @Composable
+    // 店の詳細画面
     fun ShopDetail(data: ShopData){
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
         ) {
+            // 表示要素：店舗名，画像，住所，営業時間
             Column(modifier = Modifier.padding(4.dp)) {
                 Text(text = "店舗名: ${data.name}")
                 AsyncImage(

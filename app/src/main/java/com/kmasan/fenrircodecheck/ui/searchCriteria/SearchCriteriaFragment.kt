@@ -1,14 +1,11 @@
 package com.kmasan.fenrircodecheck.ui.searchCriteria
 
 import android.annotation.SuppressLint
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,16 +20,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -52,40 +40,21 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentTransaction
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.kmasan.fenrircodecheck.model.GourmetSearchParameter
 import com.kmasan.fenrircodecheck.ui.searchResult.SearchResultFragment
 import com.kmasan.fenrircodecheck.ui.theme.FenrirCodeCheckTheme
-import kotlinx.coroutines.launch
 
 class SearchCriteriaFragment: Fragment() {
     private val viewModel: SearchCriteriaViewModel by viewModels { SearchCriteriaViewModel.factory(requireActivity()) }
-    private lateinit var mBackPressedCallback: OnBackPressedCallback
-
-    private val ranges = mutableStateOf("1000m")
-    private val expandFragment = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(this.javaClass.name, "onCreate")
 
-//        viewModel = ViewModelProvider(this,
-//            SearchCriteriaViewModel.factory(requireActivity())
-//        )[SearchCriteriaViewModel::class.java]
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                Log.d(this@SearchCriteriaFragment.javaClass.name, "viewModel.uiState.value: ${viewModel.uiState.value}")
-                expandFragment.value = viewModel.uiState.value
-                viewModel.startGPSLogger()
-                viewModel.setLastLocation()
-            }
-        }
+        // GPSの利用準備
+        viewModel.startGPSLogger()
+        viewModel.setLastLocation()
     }
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -94,19 +63,18 @@ class SearchCriteriaFragment: Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                val range = remember { ranges }
+                val range = remember { viewModel.selectRange }
                 val apiParameter by viewModel.parameter.observeAsState()
                 FenrirCodeCheckTheme{
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.background
                     ) {
                         Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-//                            Text(text = "lat: 35.171126")
-//                            Text(text = "lng: 136.909612")
+                            // 検索範囲の設定
                             Dropdown(
                                 "range",
                                 listOf(
@@ -119,10 +87,10 @@ class SearchCriteriaFragment: Fragment() {
                                 range
                             )
 
+                            // 検索条件を設定
                             Button(onClick = {
-                                Log.d(this.javaClass.name, "$ranges, $range")
-                                expandFragment.value = false
-                                viewModel.searchShop(when(ranges.value){
+                                viewModel.displayFragment.value = false
+                                viewModel.searchShop(when(range.value){
                                     "300m" -> 1
                                     "500m" -> 2
                                     "2000m" -> 4
@@ -133,7 +101,8 @@ class SearchCriteriaFragment: Fragment() {
                                 Text("Search")
                             }
                         }
-                        if(expandFragment.value && apiParameter != null){
+                        if(viewModel.displayFragment.value && apiParameter != null){
+                            // 検索結果の画面を表示
                             SetFragment(apiParameter!!, modifier = Modifier.wrapContentSize())
                         }
                     }
@@ -144,20 +113,11 @@ class SearchCriteriaFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mBackPressedCallback = object :OnBackPressedCallback(true){
-            override fun handleOnBackPressed() {
-                Log.d(this@SearchCriteriaFragment.javaClass.name, "handleOnBackPressed")
-                if(expandFragment.value){
-                    expandFragment.value = false
-                }
-            }
-        }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, mBackPressedCallback)
 
+        // 検索条件が設定されたか監視
         viewModel.parameter.observe(viewLifecycleOwner){
             Log.d(this.javaClass.name, "$it")
-            expandFragment.value = true
-            viewModel.resultFragmentExpand(true)
+            viewModel.displayFragment.value = true
         }
     }
 
@@ -166,13 +126,12 @@ class SearchCriteriaFragment: Fragment() {
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
+    // 検索結果の画面を表示
     fun SetFragment(parameter: GourmetSearchParameter ,modifier: Modifier = Modifier){
         AndroidView(modifier = modifier, factory = { context ->
             FragmentContainerView(context).apply {
-                val frameId = 2
-                id = frameId
+                id = View.generateViewId()
                 setBackgroundColor(Color.Red.hashCode())
             }
         }, update = {
@@ -188,6 +147,7 @@ class SearchCriteriaFragment: Fragment() {
     }
 
     @Composable
+    // 検索範囲の設定　選択式
     fun Dropdown(label: String, options: List<String>, selectedOptionText: MutableState<String>) {
         val expanded = remember { mutableStateOf(false) }
 

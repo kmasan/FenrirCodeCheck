@@ -2,28 +2,26 @@ package com.kmasan.fenrircodecheck
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.ActivityNotFoundException
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.FrameLayout
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -53,6 +51,7 @@ class MainActivity : AppCompatActivity() {
                     ){
                         val (icon, credit) = createRefs()
 
+                        // 初期画面の検索条件の設定画面のFragmentを表示
                         Scaffold(
                             content = {
                                 AndroidView(factory = { context ->
@@ -63,7 +62,6 @@ class MainActivity : AppCompatActivity() {
                                     val fragment = SearchCriteriaFragment.newInstance()
                                     val transaction = supportFragmentManager.beginTransaction()
                                     transaction.replace(it.id, fragment)
-//                                    transaction.addToBackStack(null)
                                     transaction.commit()
                                 })
                             },
@@ -76,7 +74,8 @@ class MainActivity : AppCompatActivity() {
                                     end.linkTo(parent.end)
                                 },
                         )
-                        
+
+                        // API利用の際の表示義務対応
                         RecruitCredit(onClick = {
                             val url = "http://webservice.recruit.co.jp/"
                             try {
@@ -88,7 +87,6 @@ class MainActivity : AppCompatActivity() {
                                 Log.d(javaClass.name, "can't open: $url")
                             }
                         }, modifier = Modifier
-                            .size(137.dp, 17.dp)
                             .constrainAs(credit) {
                                 bottom.linkTo(parent.bottom, 4.dp)
                                 end.linkTo(parent.end, 4.dp)
@@ -98,9 +96,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Permissionチェック
         requestLocationPermission()
     }
 
+    // Permissionチェック
     private fun requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(
             this,
@@ -114,6 +114,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Permissionの許可がされたか確認
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -124,25 +125,35 @@ class MainActivity : AppCompatActivity() {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 if ((grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED)) {
                     // 許可されなかった
-
+                    Log.d(javaClass.name, "disable permission")
+                }else{
+                    // 許可された　GPSの利用のために一度アプリを再起動
+                    recreate()
                 }
             }
         }
     }
 
     @Composable
+    // API利用の際の表示義務対応
     fun RecruitCredit(onClick: ()->Unit, modifier: Modifier = Modifier) {
-        IconButton(onClick = onClick,
-            modifier = modifier
-        ){
-            AsyncImage(
-                model = ImageRequest.Builder(applicationContext)
-                    .data("http://webservice.recruit.co.jp/banner/hotpepper-s.gif")
-                    .build(),
-                contentDescription = "RecruitCredit",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
-            )
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.End
+        ) {
+            IconButton(onClick = onClick,
+                modifier = Modifier.size(137.dp, 17.dp)
+            ){
+                AsyncImage(
+                    model = ImageRequest.Builder(applicationContext)
+                        .data("http://webservice.recruit.co.jp/banner/hotpepper-s.gif")
+                        .build(),
+                    contentDescription = "RecruitCredit",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(137.dp, 17.dp)
+                )
+            }
+            Text(text = "画像提供：ホットペッパー グルメ", fontSize = 8.sp)
         }
     }
 }
