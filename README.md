@@ -1,10 +1,13 @@
 # 簡易仕様書
 ## アプリ名：周辺グルメサーチ
 ## 対象OS(ver.含む)
-Android 8.0以上
+Android 8.0以上  
+(8.0, 12.0, 14.0で動作確認済み)
 ## 開発環境/言語
 開発環境: Android Studio Flamingo | 2022.2.1 Patch 2  
 言語: Kotlin 1.8.10
+## プロジェクトのリポジトリ
+https://github.com/kmasan/FenrirCodeCheck
 ## 開発期間
 約１週間
 ## 機能概要(機能一覧)
@@ -16,15 +19,20 @@ Android 8.0以上
     - 現在地：GPSから現在地を取得
     - 検索範囲：現在地から範囲を指定（５択：300, 500, 1000, 2000, 3000m）
 
+現在地については検索を実行するタイミングで取得
+
 ### 店舗詳細表示機能
+ホットペッパーグルメサーチAPIから店舗情報を取得  
 検索結果の一覧から見たい店舗をタップするとその店舗の詳細が表示される  
-詳細からGoogleMapを起動して店舗の場所を確認できる  
 その他情報としてHOT PEPPERグルメサイトに飛べる
+
+### 地図アプリ連携
+詳細から店舗の場所をGoogleMap等で確認できる
+
 
 ## 画面概要
 ### 検索条件入力画面
-検索の条件を入力する  
-現在地については検索を実行するタイミングで取得
+検索の条件を入力し検索する
 
 ### 検索結果画面
 検索結果をリストで表示  
@@ -56,22 +64,10 @@ HOT PEPPERグルメサイトに飛べるボタンを用意
 APIの利用規約でクレジット表示が必要なので常時表示
 
 ## 使用しているライブラリ、SDKなど
+API: HOT PEPPERグルメサーチAPI
 SDK：Android SDK
 
-### ライブラリ
-- androidx.core:core-ktx:1.8.0
-- org.jetbrains.kotlin:kotlin-bom:1.8.0
-- androidx.lifecycle:lifecycle-runtime-ktx:2.3.1
-- androidx.activity:activity-compose:1.7.2
-- androidx.compose:compose-bom:2022.10.00
-- androidx.compose.ui:ui
-- androidx.compose.ui:ui-graphics
-- androidx.compose.ui:ui-tooling-preview
-- androidx.compose.material3:material3
-- androidx.compose.runtime:runtime-livedata:1.4.3
-- androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10
-- androidx.fragment:fragment-ktx:1.6.0-alpha06
-- androidx.appcompat:appcompat:1.6.1
+### 追加ライブラリ
 - org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4
 - com.squareup.okhttp3:okhttp:4.10.0
 - io.coil-kt:coil-compose:2.4.0
