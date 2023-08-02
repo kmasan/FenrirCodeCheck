@@ -53,12 +53,13 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                     .getJSONObject("photo")
                     .getJSONObject("mobile")
                     .getString("l")
+                val genre = jsonObj.getJSONObject("genre").getString("name")
                 val access = jsonObj.getString("mobile_access")
                 val address = jsonObj.getString("address")
                 val open = jsonObj.getString("open")
                 shopList.add(
                     ShopData(
-                        shopName, url, thumbnail, shopTop, access, address, open
+                        shopName, url, thumbnail, shopTop, genre, access, address, open
                     )
                 )
             }
@@ -92,12 +93,14 @@ class SearchResultViewModel(private val repository: SearchResultRepository) : Vi
                     .getJSONObject("photo")
                     .getJSONObject("mobile")
                     .getString("l")
+                val genreObj = jsonObj.getJSONObject("genre")
+                val genre = "${genreObj.getString("name")}: ${genreObj.getString("catch")}"
                 val access = jsonObj.getString("mobile_access")
                 val address = jsonObj.getString("address")
                 val open = jsonObj.getString("open")
                 shopList.add(
                     ShopData(
-                        shopName, url, thumbnail, shopTop, access, address, open
+                        shopName, url, thumbnail, shopTop, genre, access, address, open
                     )
                 )
             }

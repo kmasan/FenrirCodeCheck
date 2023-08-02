@@ -6,6 +6,7 @@ data class ShopData(
     val url: String,
     val thumbnailURL: String,
     val shopTopPhoto: String,
+    val genre: String,
     val access: String,
     val address: String,
     val open: String

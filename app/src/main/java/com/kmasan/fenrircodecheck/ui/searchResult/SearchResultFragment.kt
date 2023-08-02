@@ -13,6 +13,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -188,7 +189,10 @@ class SearchResultFragment : Fragment() {
                         modifier = Modifier
                             .size(80.dp)
                     )
-                    Text(text = "店舗名: ${data.name}")
+                    Column {
+                        Text(text = "店舗名: ${data.name}")
+                        Text(text = "ジャンル: ${data.genre}")
+                    }
                 }
                 Text(text = "アクセス: ${data.access}")
             }
@@ -214,7 +218,9 @@ class SearchResultFragment : Fragment() {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(text = "住所: ${data.address}")
+                Spacer(modifier = Modifier.size(8.dp))
                 Text(text = "営業時間: ${data.open}")
+                Spacer(modifier = Modifier.size(4.dp))
                 Button(onClick = { openMap(data.name) }) {
                     Text(text = "GoogleMap")
                 }

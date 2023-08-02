@@ -76,7 +76,7 @@ class SearchCriteriaFragment: Fragment() {
                         ) {
                             // 検索範囲の設定
                             Dropdown(
-                                "範囲",
+                                "検索範囲",
                                 listOf(
                                     "300m",
                                     "500m",
